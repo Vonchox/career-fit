@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 
-export default function EligibilityForm({ tiposMovilidad, onSubmit, loading }) {
+export default function EligibilityForm({ tiposMovilidad, onSubmit, loading, hideProgramSelect }) {
   const [formData, setFormData] = useState({
     carrera: '',
     semestre: '',
@@ -35,21 +35,23 @@ export default function EligibilityForm({ tiposMovilidad, onSubmit, loading }) {
       <h2 className="text-2xl font-bold mb-6">Tus Datos</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         
-        <div>
-          <label className="text-sm font-medium text-muted">Tipo de Movilidad</label>
-          <select 
-            name="tipoMovilidadId" 
-            className="input-field" 
-            value={formData.tipoMovilidadId} 
-            onChange={handleChange} 
-            required
-          >
-            <option value="">Selecciona el programa...</option>
-            {tiposMovilidad.map(tipo => (
-              <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
-            ))}
-          </select>
-        </div>
+        {!hideProgramSelect && (
+          <div>
+            <label className="text-sm font-medium text-muted">Tipo de Movilidad</label>
+            <select 
+              name="tipoMovilidadId" 
+              className="input-field" 
+              value={formData.tipoMovilidadId} 
+              onChange={handleChange} 
+              required={!hideProgramSelect}
+            >
+              <option value="">Selecciona el programa...</option>
+              {tiposMovilidad.map(tipo => (
+                <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="text-sm font-medium text-muted">Carrera</label>

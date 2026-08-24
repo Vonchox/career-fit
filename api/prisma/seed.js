@@ -29,6 +29,24 @@ async function main() {
     }
   });
 
+  // Intercambio Estudiantil: Corea del Sur
+  const corea = await prisma.tipoMovilidad.create({
+    data: {
+      nombre: 'Intercambio Estudiantil: Corea del Sur',
+      descripcion: 'Programa de movilidad internacional con universidades en Corea del Sur.',
+      ambito: 'internacional',
+    }
+  });
+
+  // Suficiencia de Inglés (Departamento de Lenguas)
+  const ingles = await prisma.tipoMovilidad.create({
+    data: {
+      nombre: 'Suficiencia de Inglés (B2)',
+      descripcion: 'Proceso de validación o acreditación del nivel de inglés B2 obligatorio para titulación.',
+      ambito: 'nacional',
+    }
+  });
+
   // Requirements Based on Art 29-30 (simplified for demo)
   await prisma.requisito.create({
     data: {
@@ -39,7 +57,7 @@ async function main() {
       condicionCampo: 'promedio',
       condicionOperador: '>=',
       condicionValor: '16',
-      tiposMovilidad: { connect: [{ id: inter.id }, { id: nac.id }] }
+      tiposMovilidad: { connect: [{ id: inter.id }, { id: nac.id }, { id: corea.id }] }
     }
   });
 
@@ -58,6 +76,18 @@ async function main() {
 
   await prisma.requisito.create({
     data: {
+      nombre: 'Semestre Requerido (Corea)',
+      descripcion: 'Estar cursando a partir del quinto nivel de la carrera.',
+      documentoRespaldo: 'Matrícula Vigente',
+      condicionCampo: 'semestre',
+      condicionOperador: '>=',
+      condicionValor: '5',
+      tiposMovilidad: { connect: [{ id: corea.id }] }
+    }
+  });
+
+  await prisma.requisito.create({
+    data: {
       nombre: 'Estudiante Regular',
       descripcion: 'Estar matriculado en un mínimo de 15 créditos',
       documentoRespaldo: 'Certificado de Matrícula',
@@ -65,7 +95,7 @@ async function main() {
       condicionCampo: 'creditosMatriculados',
       condicionOperador: '>=',
       condicionValor: '15',
-      tiposMovilidad: { connect: [{ id: inter.id }, { id: nac.id }] }
+      tiposMovilidad: { connect: [{ id: inter.id }, { id: nac.id }, { id: corea.id }] }
     }
   });
 
@@ -78,7 +108,7 @@ async function main() {
       condicionCampo: 'tieneConvenioOInvitacion',
       condicionOperador: '==',
       condicionValor: 'true',
-      tiposMovilidad: { connect: [{ id: inter.id }, { id: nac.id }] }
+      tiposMovilidad: { connect: [{ id: inter.id }, { id: nac.id }, { id: corea.id }] }
     }
   });
 
@@ -91,7 +121,20 @@ async function main() {
       condicionCampo: 'tieneResolucionConsejoCarrera',
       condicionOperador: '==',
       condicionValor: 'true',
-      tiposMovilidad: { connect: [{ id: inter.id }, { id: nac.id }] }
+      tiposMovilidad: { connect: [{ id: inter.id }, { id: nac.id }, { id: corea.id }] }
+    }
+  });
+
+  // Requisitos específicos de inglés
+  await prisma.requisito.create({
+    data: {
+      nombre: 'Nivel Avanzado (B2)',
+      descripcion: 'Haber aprobado o validado niveles hasta B2.',
+      documentoRespaldo: 'Certificado Oxford o Certificación de Niveles',
+      condicionCampo: 'tieneConvenioOInvitacion', // Dummy para el checkbox
+      condicionOperador: '==',
+      condicionValor: 'true',
+      tiposMovilidad: { connect: [{ id: ingles.id }] }
     }
   });
 

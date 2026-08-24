@@ -180,6 +180,69 @@ app.post('/api/evaluar', authMiddleware, async (req, res) => {
   }
 });
 
+// Chatbot endpoint
+app.post('/api/chat', authMiddleware, async (req, res) => {
+  try {
+    const { messages } = req.body;
+    
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Formato de mensajes inválido' });
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.json({ 
+        response: 'Lo siento, el asistente virtual no está disponible porque no se ha configurado la clave de IA.' 
+      });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Build the system context
+    const systemInstruction = `
+      Eres el Asistente Virtual Oficial de "Career-Fit", la plataforma de movilidad académica de la Universidad de las Fuerzas Armadas ESPE (campus Sangolquí).
+      Tu tono debe ser amable, institucional y muy preciso.
+      
+      Conocimiento Base Oficial de la ESPE:
+      - Requisito de Suficiencia de Inglés: Es un requisito obligatorio de titulación para pregrado y de ingreso para posgrado.
+      - Nivel Requerido: B2 (Intermedio Alto) según el MCER.
+      - Departamento encargado: Departamento de Lenguas (antes Instituto de Idiomas).
+      - Contacto de idiomas: idiomas@espe.edu.ec, Teléfono: (02) 3989-400 (Ext. 1511 para Unidad de Registro; Ext. 4600 para gestión académica).
+      - Certificación: Se debe solicitar la "Certificación de Niveles Aprobados" a través de la Unidad de Registro.
+      - Posgrados y Externos: Pueden rendir el Examen Oxford, reconocido internacionalmente.
+      - Trámites de Movilidad: Los estudiantes deben revisar siempre el sistema BANNER o ESPEMATICO.
+      - Promedio mínimo general para movilidad internacional suele ser 16/20.
+      
+      Usa esta información para responder las preguntas del estudiante. Si te preguntan algo fuera de este contexto académico, declina educadamente la pregunta.
+      Responde de forma concisa y estructurada (usa viñetas si ayuda).
+    `;
+
+    // Convert messages for Gemini format
+    const history = messages.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }));
+
+    const chat = model.startChat({
+      history: [
+        { role: 'user', parts: [{ text: systemInstruction }] },
+        { role: 'model', parts: [{ text: 'Entendido. Actuaré como el Asistente Virtual de Career-Fit de la ESPE basándome en esa información oficial.' }] },
+        ...history.slice(0, -1) // All except the latest message
+      ]
+    });
+
+    const latestMessage = messages[messages.length - 1].content;
+    const result = await chat.sendMessage(latestMessage);
+    const responseText = result.response.text();
+
+    res.json({ response: responseText });
+    
+  } catch (error) {
+    console.error("Error en Chatbot:", error);
+    res.status(500).json({ error: 'Error interno del servidor al procesar el chat' });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
