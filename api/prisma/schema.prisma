@@ -4,10 +4,71 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Usuario {
+  id           String       @id @default(uuid())
+  nombre       String
+  email        String       @unique
+  passwordHash String
+  evaluaciones Evaluacion[]
+  createdAt    DateTime     @default(now())
+}
+
+
+model Estudiante {
+  id                            String       @id @default(uuid())
+  carrera                       String
+  semestre                      Int
+  promedio                      Float
+  creditosMatriculados          Int
+  tieneConvenioOInvitacion      Boolean
+  tieneResolucionConsejoCarrera Boolean
+  evaluaciones                  Evaluacion[]
+  createdAt                     DateTime     @default(now())
+}
+
+model TipoMovilidad {
+  id           String       @id @default(uuid())
+  nombre       String
+  descripcion  String
+  ambito       String       // "nacional" | "internacional"
+  requisitos   Requisito[]  @relation("MovilidadRequisitos")
+  evaluaciones Evaluacion[]
+}
+
+model Requisito {
+  id                 String          @id @default(uuid())
+  nombre             String
+  descripcion        String
+  documentoRespaldo  String?
+  articuloReglamento String?
+  
+  // Logic definition for dynamic evaluation
+  condicionCampo     String?         // e.g. "promedio", "semestre", "creditosMatriculados", "tieneConvenioOInvitacion"
+  condicionOperador  String?         // e.g. ">=", "==", "<="
+  condicionValor     String?         // e.g. "16", "3", "true"
+
+  tiposMovilidad     TipoMovilidad[] @relation("MovilidadRequisitos")
+}
+
+model Evaluacion {
+  id              String        @id @default(uuid())
+  estudianteId    String
+  estudiante      Estudiante    @relation(fields: [estudianteId], references: [id])
+  tipoMovilidadId String
+  tipoMovilidad   TipoMovilidad @relation(fields: [tipoMovilidadId], references: [id])
+  usuarioId       String?
+  usuario         Usuario?      @relation(fields: [usuarioId], references: [id])
+  resultado       String        // "viable" | "no_viable" | "incompleto"
+  detalle         String        // JSON stringified summary of met/unmet requirements
+  aiAnalysis      String?       // AI generated markdown response
+  fecha           DateTime      @default(now())
 }

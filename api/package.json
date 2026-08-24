@@ -11,6 +11,23 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "prisma": "^7.9.1"
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@libsql/client": "^0.17.4",
+    "@prisma/adapter-libsql": "^7.9.1",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0",
+    "zod": "^4.4.3"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
