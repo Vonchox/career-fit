@@ -1,94 +1,267 @@
-import { CheckCircle, XCircle, FileText, ExternalLink, Bot } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-
-export default function EvaluationResult({ data }) {
-  const { esViable, resultado, requisitos, tipoMovilidad, aiAnalysis } = data;
-
+import { useState } from "react";
+import {
+  Check,
+  Circle,
+  ArrowUpRight,
+  Sparkles,
+  RotateCcw,
+  Printer,
+  FileCheck2,
+} from "lucide-react";
+import { isDemo, readStored } from "../lib/api";
+export default function EvaluationResult({
+  data,
+  onAsk,
+  onReset,
+  storageScope,
+  guest,
+  onSignIn,
+  onSave,
+  saving,
+  previousEvaluation,
+  onReevaluate,
+}) {
+  const { requisitos, tipoMovilidad } = data;
+  const eligibility = data.kind === "eligibility";
+  const resultTitle = {
+    viable: "Cumples los criterios revisados",
+    no_viable: "Te falta cumplir algún requisito",
+    incompleto: "Falta información para evaluar",
+  };
+  const complete = requisitos.filter((r) => r.cumplido).length;
+  const key = `careerfit-docs-${data.guest ? "guest" : storageScope}-${data.evaluacionId}`;
+  const [checked, setChecked] = useState(() => readStored(key, []));
+  const docs = [
+    ...new Set(
+      eligibility
+        ? tipoMovilidad.documents || []
+        : requisitos.map((r) => r.documentoRespaldo).filter(Boolean),
+    ),
+  ];
+  function toggle(doc) {
+    const next = checked.includes(doc)
+      ? checked.filter((d) => d !== doc)
+      : [...checked, doc];
+    setChecked(next);
+    localStorage.setItem(key, JSON.stringify(next));
+  }
   return (
-    <div className="glass-panel animate-fade-in flex flex-col h-full overflow-y-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Resultado de Elegibilidad</h2>
-        <p className="text-muted">Programa: {tipoMovilidad.nombre}</p>
-      </div>
-
-      <div className={`p-4 rounded-lg mb-6 flex items-center gap-4 ${esViable ? 'border-success' : 'border-warning'} border`} style={{
-        backgroundColor: esViable ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-        borderColor: esViable ? 'var(--success)' : 'var(--warning)'
-      }}>
-        {esViable ? (
-          <CheckCircle size={32} className="text-success" />
-        ) : (
-          <XCircle size={32} className="text-warning" />
+    <div className="result-page">
+      <div className={`result-hero ${data.esViable ? "positive" : ""}`}>
+        <span className="eyebrow">
+          {eligibility
+            ? "EVALUACIÓN PRELIMINAR"
+            : data.tipoMovilidad.preparationOnly
+              ? "TU PREPARACIÓN DOCUMENTAL"
+              : "TU RESULTADO ORIENTATIVO"}
+        </span>
+        <h2>
+          {eligibility
+            ? resultTitle[data.resultado]
+            : data.esViable
+              ? "Tu próximo paso está más cerca."
+              : "Cada paso cuenta."}
+        </h2>
+        <p>
+          {eligibility
+            ? tipoMovilidad.manualReview
+            : data.resultado === "incompleto"
+              ? "Falta información para determinar tu elegibilidad."
+              : data.esViable
+                ? "Declaraste preparados los respaldos de esta guía. Confirma la lista completa y tu elegibilidad con la universidad."
+                : "Ya sabes por dónde avanzar. Revisa los requisitos pendientes y prepara tu camino."}
+        </p>
+        {!eligibility && (
+          <div className="result-score">
+            <strong>
+              {complete}
+              <span>/{requisitos.length}</span>
+            </strong>
+            <div>
+              {data.tipoMovilidad.preparationOnly
+                ? "respaldos preparados"
+                : "requisitos cumplidos"}
+              <div className="progress-track">
+                <span
+                  style={{
+                    width: `${requisitos.length ? (complete / requisitos.length) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         )}
-        <div>
-          <h3 className={`text-xl font-bold ${esViable ? 'text-success' : 'text-warning'}`}>
-            {esViable ? 'Candidato Viable' : 'No Viable Todavía'}
-          </h3>
-          <p className="text-sm text-main opacity-90 mt-1">
-            {esViable 
-              ? 'Cumples con los requisitos iniciales. Puedes iniciar tu proceso de postulación.' 
-              : 'Te faltan algunos requisitos por cumplir.'}
+      </div>
+      {eligibility && (
+        <div className="panel eligibility-history">
+          <p>
+            Evaluación del{" "}
+            {new Intl.DateTimeFormat("es-EC", {
+              dateStyle: "medium",
+              timeStyle: "short",
+              timeZone: "America/Guayaquil",
+            }).format(new Date(data.fecha))}
           </p>
-        </div>
-      </div>
-
-      {aiAnalysis && (
-        <div className="mb-6 p-5 rounded-lg border border-primary/20 bg-primary/5" style={{ backgroundColor: 'rgba(0, 102, 51, 0.05)', borderColor: 'rgba(0, 102, 51, 0.2)' }}>
-          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--primary-color)' }}>
-            <Bot size={20} /> Análisis Profesional
-          </h3>
-          <div className="text-sm text-main leading-relaxed markdown-content">
-            <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
-          </div>
+          <p>Se conservan los criterios que se aplicaron en esa fecha.</p>
+          {previousEvaluation && (
+            <p>
+              Resultado anterior para esta oportunidad:{" "}
+              <strong>{resultTitle[previousEvaluation.resultado]}</strong>.
+            </p>
+          )}
+          {onReevaluate && (
+            <button className="btn call-primary" onClick={onReevaluate}>
+              <RotateCcw size={15} /> Volver a evaluar con los criterios
+              actuales
+            </button>
+          )}
         </div>
       )}
-
-      <h3 className="text-lg font-semibold mb-3 border-b border-gray-300 pb-2">Detalle de Requisitos</h3>
-      <div className="flex flex-col gap-3 flex-1 mb-4">
-        {requisitos.map(req => (
-          <div key={req.id} className="flex gap-3 items-start p-3 bg-white rounded-lg border border-gray-200">
-            <div className="mt-1">
-              {req.cumplido ? <CheckCircle size={18} className="text-success" /> : <XCircle size={18} className="text-danger" />}
-            </div>
-            <div className="flex-1">
-              <h4 className="font-medium text-sm flex items-center justify-between">
-                {req.nombre}
-                <span className="text-xs text-muted font-normal bg-gray-100 px-2 py-0.5 rounded border border-gray-200">{req.articuloReglamento}</span>
-              </h4>
-              <p className="text-xs text-muted mt-1">{req.descripcion}</p>
-              {!req.cumplido && (
-                <p className="text-xs text-danger mt-1 font-medium bg-danger/10 px-2 py-1 rounded inline-block mt-2" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
-                  Tu valor: {req.valorEstudiante !== undefined ? String(req.valorEstudiante) : 'N/A'}
-                </p>
-              )}
-            </div>
+      {data.guest && (
+        <div className="guest-notice">
+          <span>
+            {isDemo
+              ? "Tu resultado se guarda en este navegador. Puedes volver a él desde Mi historial."
+              : guest
+                ? "Tu resultado está en este navegador. Iniciar sesión es opcional."
+                : "Puedes guardar esta revisión en tu cuenta."}
+          </span>
+          {!isDemo && (
+            <button
+              className="text-link"
+              disabled={saving}
+              onClick={guest ? onSignIn : onSave}
+            >
+              {guest
+                ? "Iniciar sesión para guardar"
+                : saving
+                  ? "Guardando…"
+                  : eligibility
+                    ? "Reevaluar y guardar"
+                    : "Guardar esta revisión"}
+            </button>
+          )}
+        </div>
+      )}
+      <div className="result-columns">
+        <section className="panel">
+          <div className="panel-heading">
+            <h3>Tu perfil, requisito por requisito</h3>
+            <FileCheck2 size={19} />
           </div>
-        ))}
-      </div>
-
-      {esViable && (
-        <div className="mt-auto animate-fade-in">
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2" style={{ color: 'var(--primary-color)' }}>
-            <FileText size={16} /> Documentos a reunir (según Art. 29):
-          </h3>
-          <ul className="text-xs text-muted flex flex-col gap-2 mb-4 pl-6 list-disc">
-            {requisitos.filter(r => r.documentoRespaldo).map((r, i) => (
-              <li key={i}>{r.documentoRespaldo}</li>
+          <p className="muted">{tipoMovilidad.nombre}</p>
+          <div className="requirement-list">
+            {requisitos.map((req) => (
+              <article key={req.id} className="requirement">
+                <span
+                  className={`requirement-status ${req.cumplido ? "done" : ""}`}
+                >
+                  {req.cumplido ? <Check size={15} /> : <Circle size={14} />}
+                </span>
+                <div>
+                  <h4>{req.nombre}</h4>
+                  <p>{req.descripcion}</p>
+                  <span className={`badge ${req.cumplido ? "green" : "amber"}`}>
+                    {req.evaluable === false
+                      ? "Por confirmar"
+                      : req.cumplido
+                        ? "Cumplido"
+                        : "Pendiente"}
+                  </span>
+                  {eligibility && (
+                    <p className="criterion-answer">
+                      Tu respuesta:{" "}
+                      {req.evaluable === false
+                        ? "Por confirmar"
+                        : typeof req.valorEstudiante === "number"
+                          ? `${req.valorEstudiante} %`
+                          : req.valorEstudiante
+                            ? "Sí"
+                            : "No"}
+                    </p>
+                  )}
+                  {eligibility &&
+                    previousEvaluation?.requisitos.some(
+                      (previous) =>
+                        previous.id === req.id &&
+                        previous.evaluable &&
+                        !previous.cumplido,
+                    ) &&
+                    req.cumplido && (
+                      <small className="rule-reference">
+                        Ahora cumples este criterio
+                      </small>
+                    )}
+                  {req.articuloReglamento && (
+                    <small className="rule-reference">
+                      {req.articuloReglamento}
+                    </small>
+                  )}
+                </div>
+              </article>
             ))}
-            <li>Formularios oficiales de postulación ESPE</li>
-          </ul>
-          
-          <a 
-            href="https://ube.espe.edu.ec/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="btn w-full justify-center mt-2"
-          >
-            <ExternalLink size={16} />
-            Descargar Formatos Oficiales (UBE)
-          </a>
-        </div>
-      )}
+          </div>
+        </section>
+        <aside className="result-aside">
+          <section className="panel">
+            <span className="eyebrow">TU SIGUIENTE PASO</span>
+            <h3>Prepara tus documentos.</h3>
+            <p className="muted">
+              Lista personal en este dispositivo. Marcar un documento no lo
+              envía ni lo valida.
+            </p>
+            <div className="document-list">
+              {docs.map((doc) => (
+                <label key={doc}>
+                  <input
+                    type="checkbox"
+                    checked={checked.includes(doc)}
+                    onChange={() => toggle(doc)}
+                  />
+                  <span>{doc}</span>
+                </label>
+              ))}
+            </div>
+            {tipoMovilidad.sourceUrl ? (
+              <a
+                className="text-link"
+                href={tipoMovilidad.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Consultar fuente de {tipoMovilidad.institutionName}{" "}
+                <ArrowUpRight size={16} />
+              </a>
+            ) : (
+              <p className="muted">
+                Registro histórico de un catálogo anterior. Revisa la fuente
+                original de esa evaluación.
+              </p>
+            )}
+          </section>
+          <section className="panel assistant-callout">
+            <Sparkles size={22} />
+            <h3>¿Algo no queda claro?</h3>
+            <p>Conversemos sobre tus requisitos y próximos pasos.</p>
+            <button className="btn btn-white" onClick={onAsk}>
+              Preguntar al asistente <ArrowUpRight size={16} />
+            </button>
+          </section>
+        </aside>
+      </div>
+      <div className="result-actions">
+        <button className="btn btn-white" onClick={onReset}>
+          <RotateCcw size={15} /> Nueva evaluación
+        </button>
+        <button className="btn btn-white" onClick={() => window.print()}>
+          <Printer size={15} /> Imprimir resultado
+        </button>
+      </div>
+      <p className="legal-note">
+        {data.demo ? "Datos y criterios de ejemplo. " : ""}Career-Fit es un
+        proyecto independiente. Este resultado no garantiza una beca, plaza o
+        aprobación institucional.
+      </p>
     </div>
   );
 }

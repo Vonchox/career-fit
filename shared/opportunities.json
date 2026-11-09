@@ -1,0 +1,200 @@
+[
+  {
+    "id": "82000000-0000-4000-8000-000000000001",
+    "nombre": "Beca Erasmus Mundus · GrEnFIn",
+    "descripcion": "Maestría conjunta en energía, clima y finanzas. Convocatoria internacional 2027–2028.",
+    "institution": "externa",
+    "ambito": "internacional",
+    "type": "Beca de maestría",
+    "provider": "Consorcio GrEnFIn",
+    "benefit": "Matrícula y estipendio mensual de 1.400 € para las personas seleccionadas.",
+    "audience": "Personas con estudios universitarios en un área admitida por el programa.",
+    "opensAt": "2026-10-14T11:00:00+01:00",
+    "closesAt": "2027-01-07T11:00:00+01:00",
+    "verifiedOn": "2026-11-08",
+    "sourceUrl": "https://greening-energy-market-finance-emjm.eu/application",
+    "documents": [
+      "Identificación vigente",
+      "Título y expediente académico según las bases",
+      "Constancia de inglés aceptada",
+      "Plantilla ISCED y experiencia en formato Europass"
+    ],
+    "criteria": [
+      {
+        "id": "degree",
+        "label": "Titulación universitaria",
+        "question": "¿Tienes un título universitario de al menos tres años o equivalente?",
+        "description": "El programa contempla candidaturas de personas próximas a graduarse. Si es tu caso, elige «Por confirmar» y consulta las condiciones de titulación.",
+        "expected": true
+      },
+      {
+        "id": "discipline",
+        "label": "Área de formación",
+        "question": "¿Tu título corresponde a un área admitida?",
+        "description": "Matemáticas, física, economía, estadística, tecnologías de la información o ingeniería. Consulta la equivalencia exacta en las bases.",
+        "expected": true
+      },
+      {
+        "id": "english",
+        "label": "Inglés B2 o superior",
+        "question": "¿Puedes acreditar inglés B2 o superior con una constancia aceptada?",
+        "description": "Consulta las certificaciones reconocidas en la sección de idiomas de la convocatoria.",
+        "expected": true
+      },
+      {
+        "id": "fullTime",
+        "label": "Dedicación a tiempo completo",
+        "question": "¿Puedes cursar la maestría a tiempo completo?",
+        "description": "La beca se otorga para estudios a tiempo completo.",
+        "expected": true
+      },
+      {
+        "id": "priorScholarship",
+        "label": "Beca Erasmus Mundus anterior",
+        "question": "¿Has recibido antes una beca Erasmus Mundus Joint Master?",
+        "description": "Una beca EMJM previa impide recibir otra beca EMJM.",
+        "expected": false
+      },
+      {
+        "id": "otherFunding",
+        "label": "Financiamiento para el mismo programa",
+        "question": "¿Recibirías otra beca de la Unión Europea para este mismo programa?",
+        "description": "Los apoyos de la Unión Europea para el mismo programa no se pueden acumular.",
+        "expected": false
+      }
+    ],
+    "manualReview": "El consorcio revisa la equivalencia del título, los requisitos curriculares y los méritos de cada candidatura."
+  },
+  {
+    "id": "82000000-0000-4000-8000-000000000002",
+    "nombre": "Movilidad saliente de grado · UCE",
+    "descripcion": "Intercambio académico para estudiantes de la Universidad Central del Ecuador.",
+    "institution": "uce",
+    "ambito": "internacional",
+    "type": "Movilidad académica",
+    "provider": "Universidad Central del Ecuador",
+    "audience": "Estudiantes de la UCE según las bases de cada convocatoria.",
+    "verifiedOn": "2026-11-08",
+    "sourceUrl": "https://www.uce.edu.ec/ca/web/estudiante/internacionalizacion",
+    "criteria": [
+      {
+        "id": "regular",
+        "label": "Matrícula regular",
+        "question": "¿Eres estudiante regular de grado en la UCE?",
+        "description": "Aplica a movilidad saliente de grado por asignaturas.",
+        "expected": true
+      },
+      {
+        "id": "progress",
+        "label": "Avance curricular",
+        "question": "¿Qué porcentaje de tu malla curricular tienes aprobado?",
+        "description": "El artículo 41.3 exige haber aprobado más del 60 %.",
+        "expected": 60,
+        "operator": ">"
+      },
+      {
+        "id": "average",
+        "label": "Promedio académico",
+        "question": "¿Tu promedio supera la media de tu carrera?",
+        "description": "Consulta la media de tu carrera para poder compararla.",
+        "expected": true
+      },
+      {
+        "id": "graduating",
+        "label": "Proceso de titulación",
+        "question": "¿Estás inscrito en el proceso de titulación?",
+        "description": "La movilidad saliente de grado exige que todavía no estés inscrito en titulación.",
+        "expected": false
+      }
+    ],
+    "rulesUrl": "https://repositorio.uce.edu.ec/archivos/jmsalazara/Archivos/2023/FEREGLAMENTODEMOVILIDAD.pdf",
+    "manualReview": "Confirma los requisitos de idiomas, matrícula, homologación y evaluación de competencias del artículo 41.3, así como las condiciones de tu convocatoria."
+  },
+  {
+    "id": "82000000-0000-4000-8000-000000000003",
+    "nombre": "Apoyo para actividades académicas · EPN",
+    "descripcion": "Orientación para solicitar apoyo económico para actividades académicas de grado y tecnología superior.",
+    "institution": "epn",
+    "ambito": "internacional",
+    "type": "Apoyo económico",
+    "provider": "Escuela Politécnica Nacional",
+    "audience": "Estudiantes de grado y tecnología superior de la EPN.",
+    "verifiedOn": "2026-11-08",
+    "sourceUrl": "https://www.epn.edu.ec/estudiante/actividad-academica/",
+    "criteria": [
+      {
+        "id": "regular",
+        "label": "Matrícula en la EPN",
+        "question": "¿Estudias una carrera de grado o tecnología superior en la EPN?",
+        "description": "Esta revisión cubre solicitudes de estudiantes de grado y tecnología superior.",
+        "expected": true
+      },
+      {
+        "id": "progress",
+        "label": "Créditos u horas aprobados",
+        "question": "¿Qué porcentaje de créditos u horas de tu carrera has aprobado?",
+        "description": "La guía exige haber aprobado al menos el 50 %.",
+        "expected": 50,
+        "operator": ">="
+      },
+      {
+        "id": "average",
+        "label": "Rendimiento académico",
+        "question": "¿Superas el promedio estudiantil de tu carrera o tienes el informe favorable aplicable de Bienestar Politécnico?",
+        "description": "La institución contempla un informe favorable de Bienestar Politécnico para estudiantes con discapacidad.",
+        "expected": true
+      },
+      {
+        "id": "arrears",
+        "label": "Obligaciones institucionales",
+        "question": "¿Tienes obligaciones vencidas con la EPN?",
+        "description": "La guía exige estar al día con las obligaciones institucionales.",
+        "expected": false
+      }
+    ],
+    "manualReview": "Confirma las condiciones de invitación, repetición de asignaturas y situación disciplinaria con tu unidad académica."
+  },
+  {
+    "id": "82000000-0000-4000-8000-000000000004",
+    "nombre": "Beca de movilidad estudiantil · ESPE",
+    "descripcion": "Apoyo para actividades académicas, intercambio o investigación dentro y fuera del país.",
+    "institution": "espe",
+    "ambito": "internacional",
+    "type": "Beca de movilidad",
+    "provider": "Universidad de las Fuerzas Armadas ESPE",
+    "audience": "Estudiantes de grado que cumplen las condiciones generales y específicas publicadas.",
+    "verifiedOn": "2026-11-08",
+    "sourceUrl": "https://www.espe.edu.ec/becas-movilidad-academica-estudiantil/",
+    "criteria": [
+      {
+        "id": "regular",
+        "label": "Matrícula en la ESPE",
+        "question": "¿Eres estudiante de grado de la ESPE?",
+        "description": "La ficha se refiere a becas de movilidad para estudiantes de grado.",
+        "expected": true
+      },
+      {
+        "id": "credits",
+        "label": "Carga académica",
+        "question": "¿Cumples la carga mínima de créditos u horas para conservar la gratuidad?",
+        "description": "Confirma con Admisión y Registro la carga aplicable a tu carrera.",
+        "expected": true
+      },
+      {
+        "id": "invitation",
+        "label": "Respaldo de participación",
+        "question": "¿Tienes un convenio, invitación o reconocimiento aplicable a la actividad?",
+        "description": "La ESPE solicita un respaldo según el tipo de movilidad.",
+        "expected": true
+      },
+      {
+        "id": "approval",
+        "label": "Aprobación del proyecto",
+        "question": "¿El Consejo de Carrera ya aprobó tu proyecto de movilidad?",
+        "description": "La resolución del Consejo respalda la aprobación del proyecto.",
+        "expected": true
+      }
+    ],
+    "manualReview": "Consulta también los requisitos generales de becas de grado y los respaldos adicionales que correspondan a tu actividad."
+  }
+]

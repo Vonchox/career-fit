@@ -17,7 +17,8 @@ model Usuario {
   id           String       @id @default(uuid())
   nombre       String
   email        String       @unique
-  passwordHash String
+  passwordHash String?
+  googleSub    String?      @unique
   evaluaciones Evaluacion[]
   createdAt    DateTime     @default(now())
 }
@@ -25,10 +26,10 @@ model Usuario {
 
 model Estudiante {
   id                            String       @id @default(uuid())
-  carrera                       String
-  semestre                      Int
-  promedio                      Float
-  creditosMatriculados          Int
+  carrera                       String?
+  semestre                      Int?
+  promedio                      Float?
+  creditosMatriculados          Int?
   tieneConvenioOInvitacion      Boolean
   tieneResolucionConsejoCarrera Boolean
   evaluaciones                  Evaluacion[]
@@ -37,6 +38,7 @@ model Estudiante {
 
 model TipoMovilidad {
   id           String       @id @default(uuid())
+  institution  String       @default("legacy")
   nombre       String
   descripcion  String
   ambito       String       // "nacional" | "internacional"

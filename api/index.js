@@ -1,249 +1,306 @@
-const express = require('express');
-const { z } = require('zod');
-const cors = require('cors');
-const { PrismaClient } = require('./generated/prisma');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
-
-const authRoutes = require('./src/routes/auth');
-const authMiddleware = require('./src/middlewares/authMiddleware');
-
-const prisma = new PrismaClient();
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-app.use('/api/auth', authRoutes);
-
-// Validation schema for Estudiante
+require("dotenv").config({
+  path: require("node:path").join(__dirname, ".env"),
+  quiet: true,
+});
+const express = require("express");
+const { z } = require("zod");
+const cors = require("cors");
+const prisma = require("./src/db");
+const authRoutes = require("./src/routes/auth");
+const authMiddleware = require("./src/middlewares/authMiddleware");
+const { evaluateRequirements, summarize } = require("./src/evaluation");
+const { ChatSchema, generateAnswer } = require("./src/assistant");
+const { fallbackAnswer } = require("./src/assistant");
+const { catalog, programInfo, institutionIds } = require("./src/catalog");
+const { createGoogleRouter } = require("./src/routes/google");
+const {
+  evaluateOpportunity,
+  listOpportunities,
+  opportunityIds,
+} = require("./src/opportunities");
+const answerFields = {
+  tieneRecordAcademico: z.boolean().default(false),
+  tieneCertificadoMatricula: z.boolean().default(false),
+  tieneCartaMotivacion: z.boolean().default(false),
+  tieneFormularioAplicacion: z.boolean().default(false),
+  tieneInvitacion: z.boolean().default(false),
+  tieneSolicitudApoyo: z.boolean().default(false),
+  tienePresupuesto: z.boolean().default(false),
+  tieneCartaCompromiso: z.boolean().default(false),
+};
 const EstudianteSchema = z.object({
-  carrera: z.string().min(1, "Carrera es requerida"),
-  semestre: z.number().min(1).max(20),
-  promedio: z.number().min(0).max(20),
-  creditosMatriculados: z.number().min(0),
-  tieneConvenioOInvitacion: z.boolean(),
-  tieneResolucionConsejoCarrera: z.boolean(),
-  tipoMovilidadId: z.string().uuid()
+  carrera: z
+    .string()
+    .trim()
+    .min(1, "La carrera es requerida")
+    .max(150)
+    .optional(),
+  semestre: z.number().int().min(1).max(20).optional(),
+  promedio: z.number().min(0).max(20).optional(),
+  creditosMatriculados: z.number().int().min(0).max(1000).optional(),
+  tieneConvenioOInvitacion: z.boolean().default(false),
+  tieneResolucionConsejoCarrera: z.boolean().default(false),
+  tieneCertificadoB2: z.boolean().default(false),
+  tipoMovilidadId: z.string().uuid(),
+  ...answerFields,
 });
-
-app.get('/api/tipos-movilidad', async (req, res) => {
-  try {
-    const tipos = await prisma.tipoMovilidad.findMany();
-    res.json(tipos);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error al obtener tipos de movilidad' });
-  }
-});
-
-app.post('/api/evaluar', authMiddleware, async (req, res) => {
-  try {
-    const parsedData = EstudianteSchema.parse(req.body);
-    
-    // Evaluate logic
-    const { tipoMovilidadId, ...estudianteData } = parsedData;
-    
-    // 1. Fetch requirements for this mobility type
-    const tipoMovilidad = await prisma.tipoMovilidad.findUnique({
-      where: { id: tipoMovilidadId },
-      include: { requisitos: true }
-    });
-
-    if (!tipoMovilidad) {
-      return res.status(404).json({ error: 'Tipo de movilidad no encontrado' });
-    }
-
-    // 2. Evaluate each requirement dynamically
-    const resultadosRequisitos = tipoMovilidad.requisitos.map(req => {
-      const campo = req.condicionCampo;
-      const operador = req.condicionOperador;
-      const valorEsperado = req.condicionValor;
-      
-      let cumplido = false;
-      const valorEstudiante = estudianteData[campo];
-      
-      if (valorEstudiante !== undefined && operador && valorEsperado !== null) {
-        // Parse expected value based on type of student value
-        let parsedValorEsperado;
-        if (typeof valorEstudiante === 'boolean') {
-          parsedValorEsperado = valorEsperado === 'true';
-        } else if (typeof valorEstudiante === 'number') {
-          parsedValorEsperado = parseFloat(valorEsperado);
-        } else {
-          parsedValorEsperado = valorEsperado;
-        }
-
-        switch (operador) {
-          case '>=':
-            cumplido = valorEstudiante >= parsedValorEsperado;
-            break;
-          case '<=':
-            cumplido = valorEstudiante <= parsedValorEsperado;
-            break;
-          case '==':
-            cumplido = valorEstudiante === parsedValorEsperado;
-            break;
-          case '>':
-            cumplido = valorEstudiante > parsedValorEsperado;
-            break;
-          case '<':
-            cumplido = valorEstudiante < parsedValorEsperado;
-            break;
-          default:
-            cumplido = false;
-        }
-      }
-
-      return {
-        id: req.id,
-        nombre: req.nombre,
-        descripcion: req.descripcion,
-        documentoRespaldo: req.documentoRespaldo,
-        articuloReglamento: req.articuloReglamento,
-        cumplido,
-        valorEstudiante
-      };
-    });
-
-    const esViable = resultadosRequisitos.every(r => r.cumplido);
-    const resultadoTexto = esViable ? 'viable' : 'no_viable';
-
-    // 3. Generar análisis con IA
-    let aiAnalysis = null;
+function recordResponse(record) {
+  const detail = JSON.parse(record.detalle);
+  if (detail.kind === "eligibility") return detail;
+  return {
+    evaluacionId: record.id,
+    fecha: record.fecha,
+    resultado: record.resultado,
+    esViable: record.resultado === "viable",
+    requisitos: detail,
+    tipoMovilidad: programInfo({
+      id: record.tipoMovilidad.id,
+      nombre: record.tipoMovilidad.nombre,
+      ambito: record.tipoMovilidad.ambito,
+      institution: record.tipoMovilidad.institution,
+    }),
+  };
+}
+function createApp({ database = prisma, answer = generateAnswer } = {}) {
+  const app = express();
+  const origins = process.env.CORS_ORIGIN?.split(",").map((s) => s.trim());
+  app.use(cors(origins ? { origin: origins } : {}));
+  app.use(express.json({ limit: "100kb" }));
+  app.use("/api/auth", authRoutes);
+  app.use("/api/auth", createGoogleRouter({ database }));
+  app.get("/api/instituciones", (req, res) => res.json(catalog.institutions));
+  app.get("/api/convocatorias", (req, res) => {
+    res.set("Cache-Control", "no-store").json(listOpportunities());
+  });
+  app.get("/api/health", async (req, res, next) => {
     try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy_key');
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
-      const prompt = `
-        Actúa como un asesor académico experto de la Universidad de las Fuerzas Armadas ESPE.
-        Un estudiante ha solicitado una evaluación para el tipo de movilidad: "${tipoMovilidad.nombre}".
-        El resultado de la evaluación lógica es: ${esViable ? 'VIABLE' : 'NO VIABLE'}.
-        
-        Detalles de los requisitos:
-        ${resultadosRequisitos.map(r => `- ${r.nombre}: ${r.cumplido ? 'Cumple' : 'No cumple'} (Valor reportado: ${r.valorEstudiante !== undefined ? r.valorEstudiante : 'N/A'})`).join('\n')}
-        
-        Escribe una respuesta corta y muy profesional en formato Markdown dirigida al estudiante.
-        Usa un tono institucional, empático y claro.
-        Si es viable, felicítalo y dale siguientes pasos generales.
-        Si no es viable, indícale qué requisitos le faltan de forma clara y motívalo a alcanzarlos.
-      `;
-      
-      if (process.env.GEMINI_API_KEY) {
-        const result = await model.generateContent(prompt);
-        aiAnalysis = result.response.text();
-      } else {
-        aiAnalysis = `*Nota: API Key de IA no configurada. Este es un análisis simulado.*\n\nEstimado estudiante, hemos analizado su perfil para **${tipoMovilidad.nombre}** y el resultado preliminar es **${esViable ? 'VIABLE' : 'NO VIABLE'}**.\n\n${esViable ? '¡Felicidades! Cumple con los requisitos establecidos. Por favor, acérquese a la unidad de movilidad para continuar su proceso.' : 'Actualmente no cumple con todos los requisitos. Le invitamos a revisar el detalle y seguir esforzándose.'}`;
-      }
-    } catch (aiError) {
-      console.error("Error al generar análisis de IA:", aiError);
-      aiAnalysis = "No se pudo generar el análisis avanzado con IA en este momento. Por favor revise el resumen manual.";
+      await database.$queryRaw`SELECT 1`;
+      res.json({ status: "ok" });
+    } catch (error) {
+      next(error);
     }
-
-    // 4. Save evaluation (and student data)
-    const evaluacion = await prisma.evaluacion.create({
-      data: {
-        resultado: resultadoTexto,
-        detalle: JSON.stringify(resultadosRequisitos),
-        aiAnalysis,
-        usuario: {
-          connect: { id: req.user.userId }
-        },
-        estudiante: {
-          create: estudianteData
-        },
-        tipoMovilidad: {
-          connect: { id: tipoMovilidadId }
-        }
-      }
-    });
-
-    // 5. Return response
-    res.json({
-      esViable,
-      resultado: resultadoTexto,
-      evaluacionId: evaluacion.id,
-      aiAnalysis,
-      requisitos: resultadosRequisitos,
-      tipoMovilidad: {
-        nombre: tipoMovilidad.nombre,
-        ambito: tipoMovilidad.ambito
-      }
-    });
-
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+  });
+  app.get("/api/tipos-movilidad", async (req, res, next) => {
+    try {
+      const institution = z
+        .enum(institutionIds)
+        .optional()
+        .parse(req.query.institution);
+      res.json(
+        (
+          await database.tipoMovilidad.findMany({
+            where: {
+              institution: institution || { in: institutionIds },
+              id: { notIn: opportunityIds },
+            },
+            include: { requisitos: true },
+            orderBy: { nombre: "asc" },
+          })
+        ).map(programInfo),
+      );
+    } catch (error) {
+      next(error);
     }
-    console.error(error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// Chatbot endpoint
-app.post('/api/chat', authMiddleware, async (req, res) => {
-  try {
-    const { messages } = req.body;
-    
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Formato de mensajes inválido' });
-    }
-
-    if (!process.env.GEMINI_API_KEY) {
-      return res.json({ 
-        response: 'Lo siento, el asistente virtual no está disponible porque no se ha configurado la clave de IA.' 
+  });
+  app.get("/api/evaluaciones", authMiddleware, async (req, res, next) => {
+    try {
+      const records = await database.evaluacion.findMany({
+        where: { usuarioId: req.user.userId },
+        include: { tipoMovilidad: true },
+        orderBy: { fecha: "desc" },
+        take: 50,
       });
+      res.json(records.map(recordResponse));
+    } catch (error) {
+      next(error);
     }
+  });
+  app.post("/api/evaluar", authMiddleware.optional, async (req, res, next) => {
+    try {
+      if (req.body?.convocatoriaId !== undefined) {
+        const result = evaluateOpportunity(req.body);
+        if (result.error)
+          return res.status(result.status).json({ error: result.error });
+        if (!req.user) return res.json({ ...result, guest: true });
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-    // Build the system context
-    const systemInstruction = `
-      Eres el Asistente Virtual Oficial de "Career-Fit", la plataforma de movilidad académica de la Universidad de las Fuerzas Armadas ESPE (campus Sangolquí).
-      Tu tono debe ser amable, institucional y muy preciso.
-      
-      Conocimiento Base Oficial de la ESPE:
-      - Requisito de Suficiencia de Inglés: Es un requisito obligatorio de titulación para pregrado y de ingreso para posgrado.
-      - Nivel Requerido: B2 (Intermedio Alto) según el MCER.
-      - Departamento encargado: Departamento de Lenguas (antes Instituto de Idiomas).
-      - Contacto de idiomas: idiomas@espe.edu.ec, Teléfono: (02) 3989-400 (Ext. 1511 para Unidad de Registro; Ext. 4600 para gestión académica).
-      - Certificación: Se debe solicitar la "Certificación de Niveles Aprobados" a través de la Unidad de Registro.
-      - Posgrados y Externos: Pueden rendir el Examen Oxford, reconocido internacionalmente.
-      - Trámites de Movilidad: Los estudiantes deben revisar siempre el sistema BANNER o ESPEMATICO.
-      - Promedio mínimo general para movilidad internacional suele ser 16/20.
-      
-      Usa esta información para responder las preguntas del estudiante. Si te preguntan algo fuera de este contexto académico, declina educadamente la pregunta.
-      Responde de forma concisa y estructurada (usa viñetas si ayuda).
-    `;
-
-    // Convert messages for Gemini format
-    const history = messages.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.content }]
-    }));
-
-    const chat = model.startChat({
-      history: [
-        { role: 'user', parts: [{ text: systemInstruction }] },
-        { role: 'model', parts: [{ text: 'Entendido. Actuaré como el Asistente Virtual de Career-Fit de la ESPE basándome en esa información oficial.' }] },
-        ...history.slice(0, -1) // All except the latest message
-      ]
+        const { id, institution, nombre, descripcion, ambito } =
+          result.tipoMovilidad;
+        await database.evaluacion.create({
+          data: {
+            id: result.evaluacionId,
+            fecha: new Date(result.fecha),
+            resultado: result.resultado,
+            detalle: JSON.stringify(result),
+            usuario: { connect: { id: req.user.userId } },
+            estudiante: {
+              create: {
+                tieneConvenioOInvitacion: false,
+                tieneResolucionConsejoCarrera: false,
+              },
+            },
+            tipoMovilidad: {
+              connectOrCreate: {
+                where: { id },
+                create: { id, institution, nombre, descripcion, ambito },
+              },
+            },
+          },
+        });
+        return res.json(result);
+      }
+      const form = EstudianteSchema.parse(req.body);
+      const program = await database.tipoMovilidad.findUnique({
+        where: { id: form.tipoMovilidadId },
+        include: { requisitos: true },
+      });
+      if (!program)
+        return res.status(404).json({ error: "No encontramos ese programa." });
+      const requirements = evaluateRequirements(program, form),
+        result = summarize(requirements);
+      if (!req.user) {
+        if (!institutionIds.includes(program.institution))
+          return res.status(404).json({
+            error: "Este programa ya no forma parte del catálogo público.",
+          });
+        return res.json({
+          evaluacionId: require("node:crypto").randomUUID(),
+          fecha: new Date().toISOString(),
+          resultado: result,
+          esViable: result === "viable",
+          requisitos: requirements,
+          tipoMovilidad: programInfo(program),
+          guest: true,
+          answers: form,
+        });
+      }
+      const { tipoMovilidadId } = form;
+      const studentData = Object.fromEntries(
+        [
+          "carrera",
+          "semestre",
+          "promedio",
+          "creditosMatriculados",
+          "tieneConvenioOInvitacion",
+          "tieneResolucionConsejoCarrera",
+        ]
+          .filter((key) => form[key] !== undefined)
+          .map((key) => [key, form[key]]),
+      );
+      const record = await database.evaluacion.create({
+        data: {
+          resultado: result,
+          detalle: JSON.stringify(requirements),
+          usuario: { connect: { id: req.user.userId } },
+          estudiante: { create: studentData },
+          tipoMovilidad: { connect: { id: tipoMovilidadId } },
+        },
+        include: { tipoMovilidad: true },
+      });
+      res.json(recordResponse(record));
+    } catch (error) {
+      next(error);
+    }
+  });
+  const chatLimits = new Map();
+  app.post("/api/chat", authMiddleware.optional, async (req, res, next) => {
+    try {
+      const body = ChatSchema.parse(req.body);
+      const now = Date.now();
+      for (const [key, value] of chatLimits)
+        if (value.expires < now) chatLimits.delete(key);
+      const limitKey = req.user?.userId || `guest:${req.ip}`;
+      const limit = chatLimits.get(limitKey) || {
+        count: 0,
+        expires: now + 15 * 60 * 1000,
+      };
+      if (limit.count >= 30)
+        return res.status(429).json({
+          error:
+            "Has alcanzado el límite de consultas. Inténtalo en unos minutos.",
+        });
+      limit.count++;
+      chatLimits.set(limitKey, limit);
+      let evaluation = null;
+      if (body.evaluationId) {
+        if (!req.user)
+          return res.status(401).json({
+            error: "Inicia sesión para consultar una evaluación guardada.",
+          });
+        const record = await database.evaluacion.findFirst({
+          where: { id: body.evaluationId, usuarioId: req.user.userId },
+          include: { tipoMovilidad: true },
+        });
+        if (!record)
+          return res
+            .status(404)
+            .json({ error: "No encontramos esa evaluación en tu cuenta." });
+        evaluation = recordResponse(record);
+      }
+      const programId = evaluation?.tipoMovilidad.id || body.programId;
+      const programs = await database.tipoMovilidad.findMany({
+        where: programId
+          ? { id: programId }
+          : { institution: body.institution || { in: institutionIds } },
+        include: { requisitos: true },
+      });
+      if (programId && !programs.length)
+        return res.status(404).json({ error: "No encontramos ese programa." });
+      if (
+        !evaluation &&
+        body.guestAnswers &&
+        programId &&
+        programs.length === 1
+      ) {
+        const form = EstudianteSchema.parse({
+          ...body.guestAnswers,
+          tipoMovilidadId: programId,
+        });
+        const requisitos = evaluateRequirements(programs[0], form);
+        evaluation = { resultado: summarize(requisitos), requisitos };
+      }
+      if (!req.user) {
+        if (programs.some((p) => !institutionIds.includes(p.institution)))
+          return res.status(404).json({
+            error: "Este programa ya no está en el catálogo público.",
+          });
+        return res.json({
+          response: fallbackAnswer(
+            body.messages.at(-1).content,
+            programs,
+            evaluation,
+          ),
+          mode: "guide",
+        });
+      }
+      res.json(await answer(body.messages, programs, evaluation));
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.use((error, req, res, next) => {
+    if (error instanceof z.ZodError)
+      return res.status(400).json({ error: error.issues });
+    if (error.type === "entity.parse.failed")
+      return res
+        .status(400)
+        .json({ error: "El cuerpo de la solicitud no es JSON válido." });
+    if (error.type === "entity.too.large")
+      return res
+        .status(413)
+        .json({ error: "La solicitud es demasiado grande." });
+    console.error("API error:", error.code || error.name);
+    res.status(500).json({
+      error: "No pudimos completar la solicitud. Inténtalo de nuevo.",
     });
-
-    const latestMessage = messages[messages.length - 1].content;
-    const result = await chat.sendMessage(latestMessage);
-    const responseText = result.response.text();
-
-    res.json({ response: responseText });
-    
-  } catch (error) {
-    console.error("Error en Chatbot:", error);
-    res.status(500).json({ error: 'Error interno del servidor al procesar el chat' });
-  }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`);
-});
+  });
+  return app;
+}
+if (require.main === module) {
+  if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET)
+    throw new Error("JWT_SECRET is required in production.");
+  const port = process.env.PORT || 3000;
+  createApp().listen(port, () =>
+    console.log(`Career-Fit API: http://localhost:${port}`),
+  );
+}
+module.exports = { createApp };

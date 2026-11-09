@@ -1,4 +1,7 @@
 # Logs
+.db-backups/
+/api/*.db*
+/api/prisma/*.db*
 logs
 *.log
 npm-debug.log*

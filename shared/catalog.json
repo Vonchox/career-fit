@@ -1,0 +1,192 @@
+{
+  "institutions": [
+    {
+      "id": "uce",
+      "shortName": "UCE",
+      "name": "Universidad Central del Ecuador",
+      "url": "https://www.uce.edu.ec/en/web/estudiante",
+      "sourceUrl": "https://aka-cdn.uce.edu.ec/ares/w/direcs/dri/Documentos/Movilidad%20Estudiantil%20Requisitos.pdf"
+    },
+    {
+      "id": "epn",
+      "shortName": "EPN",
+      "name": "Escuela Politécnica Nacional",
+      "url": "https://www.epn.edu.ec/estudiante/programas-y-servicios-internacionales/",
+      "sourceUrl": "https://www.epn.edu.ec/movilidad-e-internacionalizacion/"
+    },
+    {
+      "id": "espe",
+      "shortName": "ESPE",
+      "name": "Universidad de las Fuerzas Armadas ESPE",
+      "url": "https://ube.espe.edu.ec/",
+      "sourceUrl": "https://www.espe.edu.ec/becas-movilidad-academica-estudiantil/"
+    }
+  ],
+  "programs": [
+    {
+      "id": "81000000-0000-4000-8000-000000000001",
+      "institution": "uce",
+      "nombre": "Movilidad internacional · UCE",
+      "descripcion": "Organiza los respaldos de tu expediente de movilidad saliente. Confirma los requisitos de la convocatoria con la UCE.",
+      "ambito": "internacional",
+      "requirements": [
+        {
+          "field": "tieneRecordAcademico",
+          "nombre": "Récord académico",
+          "descripcion": "Prepara tu récord académico legalizado con el promedio general.",
+          "documentoRespaldo": "Récord académico legalizado"
+        },
+        {
+          "field": "tieneCertificadoMatricula",
+          "nombre": "Certificado de matrícula",
+          "descripcion": "Ten a mano tu certificado de matrícula para el expediente.",
+          "documentoRespaldo": "Certificado de matrícula"
+        },
+        {
+          "field": "tieneCartaMotivacion",
+          "nombre": "Carta de motivación",
+          "descripcion": "Explica el programa de tu interés y el apoyo que solicitas.",
+          "documentoRespaldo": "Carta de motivación"
+        },
+        {
+          "field": "tieneFormularioAplicacion",
+          "nombre": "Formulario de aplicación",
+          "descripcion": "Consulta a Relaciones Internacionales el formulario vigente de movilidad saliente.",
+          "documentoRespaldo": "Formulario de aplicación vigente"
+        }
+      ]
+    },
+    {
+      "id": "81000000-0000-4000-8000-000000000002",
+      "institution": "epn",
+      "nombre": "Intercambio y experiencias internacionales · EPN",
+      "descripcion": "Prepara los respaldos iniciales para consultar movilidad y apoyo a actividades académicas internacionales en la EPN.",
+      "ambito": "internacional",
+      "requirements": [
+        {
+          "field": "tieneInvitacion",
+          "nombre": "Carta de invitación",
+          "descripcion": "Reúne la invitación a la actividad para consultar su pertinencia.",
+          "documentoRespaldo": "Carta de invitación a la actividad"
+        },
+        {
+          "field": "tieneSolicitudApoyo",
+          "nombre": "Solicitud de apoyo",
+          "descripcion": "Prepara la solicitud dirigida al Decano o Director de la ESFOT, según corresponda.",
+          "documentoRespaldo": "Solicitud de gestión de apoyo"
+        },
+        {
+          "field": "tienePresupuesto",
+          "nombre": "Presupuesto referencial",
+          "descripcion": "Organiza una estimación de los gastos de la actividad.",
+          "documentoRespaldo": "Presupuesto referencial de gastos"
+        }
+      ]
+    },
+    {
+      "id": "81000000-0000-4000-8000-000000000003",
+      "institution": "epn",
+      "nombre": "Actividades académicas en Ecuador · EPN",
+      "descripcion": "Organiza tu consulta sobre apoyos para eventos, prácticas o actividades académicas nacionales. No es una convocatoria abierta.",
+      "ambito": "nacional",
+      "requirements": [
+        {
+          "field": "tieneInvitacion",
+          "nombre": "Invitación a la actividad",
+          "descripcion": "Prepara la invitación o respaldo de la actividad académica.",
+          "documentoRespaldo": "Invitación o respaldo de la actividad"
+        },
+        {
+          "field": "tieneSolicitudApoyo",
+          "nombre": "Solicitud de apoyo",
+          "descripcion": "Consulta la gestión de apoyo a través de tu unidad académica.",
+          "documentoRespaldo": "Solicitud de gestión de apoyo"
+        },
+        {
+          "field": "tienePresupuesto",
+          "nombre": "Presupuesto referencial",
+          "descripcion": "Detalla los gastos previstos para consultar el apoyo disponible.",
+          "documentoRespaldo": "Presupuesto referencial de gastos"
+        }
+      ]
+    },
+    {
+      "id": "81000000-0000-4000-8000-000000000004",
+      "institution": "espe",
+      "nombre": "Movilidad internacional · ESPE",
+      "descripcion": "Organiza los respaldos iniciales para consultar una beca de movilidad en la ESPE. Confirma la convocatoria y sus condiciones con Bienestar Universitario.",
+      "ambito": "internacional",
+      "requirements": [
+        {
+          "field": "tieneInvitacion",
+          "nombre": "Convenio o invitación",
+          "descripcion": "Prepara el convenio, invitación o reconocimiento que respalda tu participación.",
+          "documentoRespaldo": "Convenio, carta de invitación o reconocimiento"
+        },
+        {
+          "field": "tieneCertificadoMatricula",
+          "nombre": "Certificado de matrícula",
+          "descripcion": "Reúne el certificado de matrícula legalizado por Admisión y Registro.",
+          "documentoRespaldo": "Certificado de matrícula legalizado"
+        },
+        {
+          "field": "tieneSolicitudApoyo",
+          "nombre": "Solicitud de beca de movilidad",
+          "descripcion": "Organiza la solicitud con fechas, destino y montos solicitados.",
+          "documentoRespaldo": "Solicitud de beca de movilidad académica"
+        },
+        {
+          "field": "tieneResolucionConsejoCarrera",
+          "nombre": "Resolución del Consejo de Carrera",
+          "descripcion": "Consulta la resolución aprobada y legalizada de tu proyecto de movilidad.",
+          "documentoRespaldo": "Resolución del Consejo de Carrera"
+        },
+        {
+          "field": "tieneCartaCompromiso",
+          "nombre": "Carta de compromiso",
+          "descripcion": "Prepara la carta firmada por el estudiante y su tutor académico.",
+          "documentoRespaldo": "Carta de compromiso del estudiante y tutor"
+        }
+      ]
+    },
+    {
+      "id": "81000000-0000-4000-8000-000000000005",
+      "institution": "espe",
+      "nombre": "Movilidad académica en Ecuador · ESPE",
+      "descripcion": "Organiza los respaldos iniciales para consultar una beca de movilidad en la ESPE. Confirma la convocatoria y sus condiciones con Bienestar Universitario.",
+      "ambito": "nacional",
+      "requirements": [
+        {
+          "field": "tieneInvitacion",
+          "nombre": "Convenio o invitación",
+          "descripcion": "Prepara el convenio, invitación o reconocimiento que respalda tu participación.",
+          "documentoRespaldo": "Convenio, carta de invitación o reconocimiento"
+        },
+        {
+          "field": "tieneCertificadoMatricula",
+          "nombre": "Certificado de matrícula",
+          "descripcion": "Reúne el certificado de matrícula legalizado por Admisión y Registro.",
+          "documentoRespaldo": "Certificado de matrícula legalizado"
+        },
+        {
+          "field": "tieneSolicitudApoyo",
+          "nombre": "Solicitud de beca de movilidad",
+          "descripcion": "Organiza la solicitud con fechas, destino y montos solicitados.",
+          "documentoRespaldo": "Solicitud de beca de movilidad académica"
+        },
+        {
+          "field": "tieneResolucionConsejoCarrera",
+          "nombre": "Resolución del Consejo de Carrera",
+          "descripcion": "Consulta la resolución aprobada y legalizada de tu proyecto de movilidad.",
+          "documentoRespaldo": "Resolución del Consejo de Carrera"
+        },
+        {
+          "field": "tieneCartaCompromiso",
+          "nombre": "Carta de compromiso",
+          "descripcion": "Prepara la carta firmada por el estudiante y su tutor académico.",
+          "documentoRespaldo": "Carta de compromiso del estudiante y tutor"
+        }
+      ]
+    }
+  ]
+}

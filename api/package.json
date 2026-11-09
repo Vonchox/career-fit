@@ -4,7 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "node --test",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "db:institutions": "node scripts/seed-institutions.js",
+    "check:ai": "node scripts/check-ai.js"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +21,6 @@
     "prisma": "^5.22.0"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.17.4",
     "@prisma/adapter-libsql": "^7.9.1",
     "@prisma/adapter-pg": "^7.9.1",
@@ -23,6 +29,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "google-auth-library": "^11.3.3",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.0",
     "zod": "^4.4.3"
